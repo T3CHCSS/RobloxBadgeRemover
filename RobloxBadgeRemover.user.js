@@ -15,6 +15,9 @@
 // @grant        none
 // ==/UserScript==
 
+// AUTO UPDATER MIGHT BE BROKEN!
+
+
 (async () => {
     "use strict";
 
