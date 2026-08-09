@@ -1,4 +1,3 @@
-```javascript
 // ==UserScript==
 // @name         Badge Remover V3
 // @namespace    https://github.com/T3CHCSS/RobloxBadgeRemover/
@@ -320,4 +319,3 @@
         );
     }
 })();
-```
