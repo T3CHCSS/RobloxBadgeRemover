@@ -1,0 +1,61 @@
+name: Auto Bump Version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+
+      - name: Parse version
+        id: parse_version
+        run: |
+          TAG=${{ steps.get_tag.outputs.latest_tag }}
+          VERSION=${TAG#v}
+          echo "current_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Increment patch version
+        id: increment_version
+        run: |
+          CURRENT=${{ steps.parse_version.outputs.current_version }}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Update version in script
+        run: |
+          sed -i 's/^\/\/ @version.*$/\/\/ @version      ${{ steps.increment_version.outputs.new_version }}/' RobloxBadgeRemover.user.js
+          echo "Updated version to ${{ steps.increment_version.outputs.new_version }}"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add RobloxBadgeRemover.user.js
+          git diff --cached --quiet || (git commit -m "chore: bump version to ${{ steps.increment_version.outputs.new_version }}" && git push)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.increment_version.outputs.new_version }}
+          files: RobloxBadgeRemover.user.js
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
