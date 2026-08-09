@@ -6,8 +6,8 @@
 // @author       Seanszy
 // @homepageURL  https://github.com/T3CHCSS/RobloxBadgeRemover/
 // @source       https://github.com/T3CHCSS/RobloxBadgeRemover/
-// @updateURL    https://raw.githubusercontent.com/T3CHCSS/RobloxBadgeRemover/main/RobloxBadgeRemover.user.js
-// @downloadURL  https://raw.githubusercontent.com/T3CHCSS/RobloxBadgeRemover/main/RobloxBadgeRemover.user.js
+// @updateURL    https://github.com/T3CHCSS/RobloxBadgeRemover/releases/latest/download/RobloxBadgeRemover.user.js
+// @downloadURL  https://github.com/T3CHCSS/RobloxBadgeRemover/releases/latest/download/RobloxBadgeRemover.user.js
 // @match        https://roblox.com/*
 // @match        https://www.roblox.com/*
 // @license      MIT
