@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         dl-librescore
+// @name         Badge Remover
 // @namespace    https://github.com/T3CHCSS/RobloxBadgeRemover/
 // @homepageURL  https://github.com/T3CHCSS/RobloxBadgeRemover/
 // @updateURL    https://raw.githubusercontent.com/T3CHCSS/RobloxBadgeRemover/main/BadgeRemover.user.js
