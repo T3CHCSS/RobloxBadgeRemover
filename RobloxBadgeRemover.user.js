@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Badge Remover V3
 // @namespace    https://github.com/T3CHCSS/RobloxBadgeRemover/
-// @version      latest.latest.9
+// @version      latest.latest.8
 // @description  Removes selected Roblox badges from your account.
 // @author       Seanszy
 // @homepageURL  https://github.com/T3CHCSS/RobloxBadgeRemover/
@@ -15,16 +15,12 @@
 // @grant        none
 // ==/UserScript==
 
-// AUTO UPDATER MIGHT BE BROKEN!
-// USE WITH CAUTION
-// I AM NOT RESPONSIBLE FOR BROKEN UPDATES | THEY WILL GET PATCHED WHEN I GET TIME
-
 (async () => {
     "use strict";
 
-    // =========================
+    // =========================================================
     // CONFIG
-    // =========================
+    // =========================================================
 
     const config = {
         badgesToDelete: [
@@ -39,19 +35,19 @@
         ],
 
         settings: {
-            requestDelay: 1000
+            requestDelay: 1000,
+
+            // Automatically scan when the script loads.
+            autoScan: true
         }
     };
 
-    // =========================
-    // PERMANENT STORAGE
-    // =========================
+    // =========================================================
+    // IMPORTANT:
+    // DO NOT CHANGE THESE STORAGE KEYS IN FUTURE UPDATES.
     //
-    // DO NOT CHANGE THESE KEYS IN FUTURE UPDATES.
-    //
-    // These values are stored in Roblox's localStorage,
-    // not inside the userscript itself.
-    //
+    // They are what make settings survive script updates.
+    // =========================================================
 
     const CUSTOM_BADGES_STORAGE_KEY =
         "seanszy_badge_remover_custom_badges_v1";
@@ -59,23 +55,21 @@
     const UI_MINIMIZED_STORAGE_KEY =
         "seanszy_badge_remover_ui_minimized_v1";
 
-    // =========================
-    // CUSTOM BADGE STORAGE
-    // =========================
+    // =========================================================
+    // LOAD CUSTOM BADGES
+    // =========================================================
 
     function loadCustomBadges() {
         try {
-            const saved =
-                localStorage.getItem(
-                    CUSTOM_BADGES_STORAGE_KEY
-                );
+            const saved = localStorage.getItem(
+                CUSTOM_BADGES_STORAGE_KEY
+            );
 
             if (!saved) {
                 return [];
             }
 
-            const parsed =
-                JSON.parse(saved);
+            const parsed = JSON.parse(saved);
 
             if (!Array.isArray(parsed)) {
                 return [];
@@ -84,7 +78,7 @@
             return [
                 ...new Set(
                     parsed
-                        .map(id => Number(id))
+                        .map(Number)
                         .filter(
                             id =>
                                 Number.isSafeInteger(id) &&
@@ -92,7 +86,6 @@
                         )
                 )
             ];
-
         } catch (error) {
             console.error(
                 "[Badge Remover] Failed to load custom badges:",
@@ -108,7 +101,7 @@
             const cleaned = [
                 ...new Set(
                     badges
-                        .map(id => Number(id))
+                        .map(Number)
                         .filter(
                             id =>
                                 Number.isSafeInteger(id) &&
@@ -123,7 +116,6 @@
             );
 
             return true;
-
         } catch (error) {
             console.error(
                 "[Badge Remover] Failed to save custom badges:",
@@ -134,12 +126,11 @@
         }
     }
 
-    let customBadges =
-        loadCustomBadges();
+    let customBadges = loadCustomBadges();
 
-    // =========================
-    // UI MINIMIZED STORAGE
-    // =========================
+    // =========================================================
+    // LOAD MINIMIZED STATE
+    // =========================================================
 
     function loadMinimizedState() {
         try {
@@ -148,28 +139,19 @@
                     UI_MINIMIZED_STORAGE_KEY
                 ) === "true"
             );
-
         } catch (error) {
-            console.error(
-                "[Badge Remover] Failed to load UI state:",
-                error
-            );
-
             return false;
         }
     }
 
-    function saveMinimizedState(minimized) {
+    function saveMinimizedState(value) {
         try {
             localStorage.setItem(
                 UI_MINIMIZED_STORAGE_KEY,
-                minimized
-                    ? "true"
-                    : "false"
+                value ? "true" : "false"
             );
 
             return true;
-
         } catch (error) {
             console.error(
                 "[Badge Remover] Failed to save UI state:",
@@ -180,25 +162,27 @@
         }
     }
 
-    // =========================
+    // =========================================================
     // UI
-    // =========================
+    // =========================================================
 
-    const panel =
-        document.createElement("div");
+    const panel = document.createElement("div");
 
-    panel.id =
-        "seanszyBadgeRemover";
+    panel.id = "seanszyBadgeRemover";
 
     panel.style.cssText = `
         position: fixed;
         top: 50%;
         right: 15px;
         transform: translateY(-50%);
+
         width: 230px;
         max-height: 450px;
+
         overflow-y: auto;
+
         z-index: 999999;
+
         padding: 10px;
         box-sizing: border-box;
 
@@ -209,9 +193,11 @@
 
         background: var(--badge-remover-bg);
         color: var(--badge-remover-text);
+
         border: 1px solid var(--badge-remover-border);
 
-        box-shadow: 0 0 10px var(--badge-remover-shadow);
+        box-shadow:
+            0 0 10px var(--badge-remover-shadow);
 
         transition:
             background 0.2s ease,
@@ -221,43 +207,53 @@
 
     panel.innerHTML = `
         <div style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 7px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:7px;
         ">
+
             <b>Badge Remover</b>
 
             <button
                 id="badgeRemoverToggleUI"
                 style="
-                    background: var(--badge-remover-button);
-                    color: var(--badge-remover-text);
-                    border: 1px solid var(--badge-remover-border);
-                    border-radius: 4px;
-                    cursor: pointer;
-                    width: 22px;
-                    height: 20px;
+                    background:var(--badge-remover-button);
+                    color:var(--badge-remover-text);
+
+                    border:1px solid var(--badge-remover-border);
+                    border-radius:4px;
+
+                    cursor:pointer;
+
+                    width:22px;
+                    height:20px;
                 "
             >−</button>
+
         </div>
 
         <div id="badgeRemoverContent">
 
-            <!-- SCAN BUTTON -->
+            <!-- SCAN -->
 
             <button
                 id="badgeRemoverScanButton"
                 style="
-                    width: 100%;
-                    background: var(--badge-remover-button);
-                    color: var(--badge-remover-text);
-                    border: 1px solid var(--badge-remover-border);
-                    border-radius: 5px;
-                    padding: 7px;
-                    margin-bottom: 8px;
-                    cursor: pointer;
-                    font-weight: bold;
+                    width:100%;
+
+                    background:var(--badge-remover-button);
+                    color:var(--badge-remover-text);
+
+                    border:1px solid var(--badge-remover-border);
+                    border-radius:5px;
+
+                    padding:7px;
+                    margin-bottom:8px;
+
+                    cursor:pointer;
+
+                    font-weight:bold;
                 "
             >
                 Scan Badges
@@ -266,30 +262,30 @@
             <div
                 id="badgeRemoverStatus"
                 style="
-                    margin-bottom: 7px;
+                    margin-bottom:7px;
                 "
             >
                 Ready
             </div>
 
-            <!-- ADD CUSTOM BADGE -->
+            <!-- ADD BADGE -->
 
             <div style="
-                border-top: 1px solid var(--badge-remover-border);
-                padding-top: 8px;
-                margin-top: 5px;
+                border-top:1px solid var(--badge-remover-border);
+                padding-top:8px;
+                margin-top:5px;
             ">
 
                 <b style="
-                    display: block;
-                    margin-bottom: 5px;
+                    display:block;
+                    margin-bottom:5px;
                 ">
                     Add Custom Badge
                 </b>
 
                 <div style="
-                    display: flex;
-                    gap: 4px;
+                    display:flex;
+                    gap:4px;
                 ">
 
                     <input
@@ -297,32 +293,45 @@
                         type="text"
                         placeholder="Badge ID"
                         style="
-                            flex: 1;
-                            min-width: 0;
+                            flex:1;
+                            min-width:0;
 
-                            background: var(--badge-remover-input);
-                            color: var(--badge-remover-text);
+                            background:
+                                var(--badge-remover-input);
 
-                            border: 1px solid var(--badge-remover-border);
-                            border-radius: 4px;
+                            color:
+                                var(--badge-remover-text);
 
-                            padding: 5px;
-                            box-sizing: border-box;
-                            outline: none;
+                            border:
+                                1px solid var(--badge-remover-border);
+
+                            border-radius:4px;
+
+                            padding:5px;
+
+                            box-sizing:border-box;
+
+                            outline:none;
                         "
                     >
 
                     <button
                         id="badgeRemoverAddButton"
                         style="
-                            background: var(--badge-remover-button);
-                            color: var(--badge-remover-text);
+                            background:
+                                var(--badge-remover-button);
 
-                            border: 1px solid var(--badge-remover-border);
-                            border-radius: 4px;
+                            color:
+                                var(--badge-remover-text);
 
-                            padding: 5px 8px;
-                            cursor: pointer;
+                            border:
+                                1px solid var(--badge-remover-border);
+
+                            border-radius:4px;
+
+                            padding:5px 8px;
+
+                            cursor:pointer;
                         "
                     >
                         Add
@@ -333,24 +342,24 @@
                 <div
                     id="badgeRemoverAddMessage"
                     style="
-                        margin-top: 5px;
-                        min-height: 14px;
+                        margin-top:5px;
+                        min-height:14px;
                     "
                 ></div>
 
             </div>
 
-            <!-- SAVED CUSTOM BADGES -->
+            <!-- CUSTOM BADGES -->
 
             <div style="
-                border-top: 1px solid var(--badge-remover-border);
-                padding-top: 8px;
-                margin-top: 8px;
+                border-top:1px solid var(--badge-remover-border);
+                padding-top:8px;
+                margin-top:8px;
             ">
 
                 <b style="
-                    display: block;
-                    margin-bottom: 5px;
+                    display:block;
+                    margin-bottom:5px;
                 ">
                     Saved Custom Badges
                 </b>
@@ -362,9 +371,9 @@
             <!-- LOGS -->
 
             <div style="
-                border-top: 1px solid var(--badge-remover-border);
-                padding-top: 8px;
-                margin-top: 8px;
+                border-top:1px solid var(--badge-remover-border);
+                padding-top:8px;
+                margin-top:8px;
             ">
 
                 <div id="badgeRemoverLogs"></div>
@@ -376,16 +385,6 @@
 
     document.body.appendChild(panel);
 
-    const status =
-        panel.querySelector(
-            "#badgeRemoverStatus"
-        );
-
-    const logs =
-        panel.querySelector(
-            "#badgeRemoverLogs"
-        );
-
     const content =
         panel.querySelector(
             "#badgeRemoverContent"
@@ -394,6 +393,16 @@
     const toggleUI =
         panel.querySelector(
             "#badgeRemoverToggleUI"
+        );
+
+    const status =
+        panel.querySelector(
+            "#badgeRemoverStatus"
+        );
+
+    const logs =
+        panel.querySelector(
+            "#badgeRemoverLogs"
         );
 
     const scanButton =
@@ -421,14 +430,23 @@
             "#badgeRemoverCustomList"
         );
 
-    // =========================
-    // LOAD SAVED UI STATE
-    // =========================
+    // =========================================================
+    // IMPORTANT FIX
+    // =========================================================
+
+    // This was missing in the previous version.
+    // Without this, scanning immediately crashed.
+    let scanning = false;
+
+    // =========================================================
+    // MINIMIZED STATE
+    // =========================================================
 
     let minimized =
         loadMinimizedState();
 
     function applyMinimizedState() {
+
         content.style.display =
             minimized
                 ? "none"
@@ -445,19 +463,13 @@
                 : "230px";
     }
 
-    // Apply the saved state immediately.
     applyMinimizedState();
-
-    // =========================
-    // MINIMIZE / OPEN
-    // =========================
 
     toggleUI.onclick = () => {
 
         minimized =
             !minimized;
 
-        // Save immediately.
         saveMinimizedState(
             minimized
         );
@@ -465,11 +477,11 @@
         applyMinimizedState();
     };
 
-    // =========================
-    // ROBLOX THEME DETECTION
-    // =========================
+    // =========================================================
+    // THEME
+    // =========================================================
 
-    function getThemeColors() {
+    function updateTheme() {
 
         const bodyStyle =
             getComputedStyle(
@@ -480,6 +492,12 @@
             getComputedStyle(
                 document.documentElement
             );
+
+        let background =
+            bodyStyle.backgroundColor;
+
+        let text =
+            bodyStyle.color;
 
         const possibleBackgrounds = [
             bodyStyle.getPropertyValue(
@@ -507,7 +525,7 @@
             )
         ];
 
-        const possibleTextColors = [
+        const possibleTexts = [
             bodyStyle.getPropertyValue(
                 "--text-color"
             ),
@@ -533,48 +551,43 @@
             )
         ];
 
-        let background =
+        const foundBackground =
             possibleBackgrounds
-                .map(value =>
-                    value.trim()
-                )
+                .map(v => v.trim())
                 .find(Boolean);
 
-        let text =
-            possibleTextColors
-                .map(value =>
-                    value.trim()
-                )
+        const foundText =
+            possibleTexts
+                .map(v => v.trim())
                 .find(Boolean);
 
-        if (!background) {
+        if (foundBackground) {
             background =
-                bodyStyle.backgroundColor;
+                foundBackground;
         }
 
-        if (!text) {
+        if (foundText) {
             text =
-                bodyStyle.color;
+                foundText;
         }
 
-        let isLight =
-            false;
-
-        const rgbMatch =
+        const rgb =
             background.match(
                 /rgba?\((\d+),\s*(\d+),\s*(\d+)/
             );
 
-        if (rgbMatch) {
+        let isLight = false;
+
+        if (rgb) {
 
             const r =
-                Number(rgbMatch[1]);
+                Number(rgb[1]);
 
             const g =
-                Number(rgbMatch[2]);
+                Number(rgb[2]);
 
             const b =
-                Number(rgbMatch[3]);
+                Number(rgb[3]);
 
             const brightness =
                 (
@@ -609,95 +622,56 @@
                     : "#ffffff";
         }
 
-        const border =
-            isLight
-                ? "rgba(0, 0, 0, 0.12)"
-                : "rgba(255, 255, 255, 0.12)";
-
-        const button =
-            isLight
-                ? "rgba(0, 0, 0, 0.06)"
-                : "rgba(255, 255, 255, 0.08)";
-
-        const input =
-            isLight
-                ? "rgba(0, 0, 0, 0.04)"
-                : "rgba(0, 0, 0, 0.18)";
-
-        const shadow =
-            isLight
-                ? "rgba(0, 0, 0, 0.20)"
-                : "rgba(0, 0, 0, 0.50)";
-
-        return {
-            background,
-            text,
-            border,
-            button,
-            input,
-            shadow
-        };
-    }
-
-    function updateTheme() {
-
-        const colors =
-            getThemeColors();
-
         panel.style.setProperty(
             "--badge-remover-bg",
-            colors.background
+            background
         );
 
         panel.style.setProperty(
             "--badge-remover-text",
-            colors.text
+            text
         );
 
         panel.style.setProperty(
             "--badge-remover-border",
-            colors.border
+            isLight
+                ? "rgba(0,0,0,.12)"
+                : "rgba(255,255,255,.12)"
         );
 
         panel.style.setProperty(
             "--badge-remover-button",
-            colors.button
+            isLight
+                ? "rgba(0,0,0,.06)"
+                : "rgba(255,255,255,.08)"
         );
 
         panel.style.setProperty(
             "--badge-remover-input",
-            colors.input
+            isLight
+                ? "rgba(0,0,0,.04)"
+                : "rgba(0,0,0,.18)"
         );
 
         panel.style.setProperty(
             "--badge-remover-shadow",
-            colors.shadow
+            isLight
+                ? "rgba(0,0,0,.20)"
+                : "rgba(0,0,0,.50)"
         );
     }
 
     updateTheme();
 
-    // =========================
-    // WATCH FOR THEME CHANGES
-    // =========================
-
     const themeObserver =
         new MutationObserver(
-            () => {
-                updateTheme();
-            }
+            updateTheme
         );
 
     themeObserver.observe(
         document.documentElement,
         {
             attributes: true,
-            attributeFilter: [
-                "class",
-                "style",
-                "data-theme",
-                "data-color-theme"
-            ],
             subtree: true
         }
     );
@@ -706,35 +680,26 @@
         document.body,
         {
             attributes: true,
-            attributeFilter: [
-                "class",
-                "style",
-                "data-theme",
-                "data-color-theme"
-            ],
             subtree: true
         }
     );
 
-    setInterval(
-        updateTheme,
-        1000
-    );
-
-    // =========================
-    // LOGGING
-    // =========================
+    // =========================================================
+    // LOG
+    // =========================================================
 
     function log(
-        text,
+        message,
         color = null
     ) {
 
         const line =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         line.textContent =
-            text;
+            message;
 
         line.style.color =
             color ||
@@ -757,9 +722,9 @@
             logs.scrollHeight;
     }
 
-    // =========================
+    // =========================================================
     // CUSTOM BADGE LIST
-    // =========================
+    // =========================================================
 
     function renderCustomBadges() {
 
@@ -788,121 +753,117 @@
             return;
         }
 
-        customBadges.forEach(
-            badgeId => {
+        for (
+            const badgeId
+            of customBadges
+        ) {
 
-                const row =
-                    document.createElement(
-                        "div"
-                    );
-
-                row.style.cssText = `
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 5px;
-                    margin-bottom: 4px;
-                    background: var(--badge-remover-button);
-                    padding: 4px 5px;
-                    border-radius: 4px;
-                `;
-
-                const idText =
-                    document.createElement(
-                        "span"
-                    );
-
-                idText.textContent =
-                    String(badgeId);
-
-                idText.style.cssText = `
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    flex: 1;
-                `;
-
-                const removeButton =
-                    document.createElement(
-                        "button"
-                    );
-
-                removeButton.textContent =
-                    "×";
-
-                removeButton.title =
-                    "Remove this custom badge";
-
-                removeButton.style.cssText = `
-                    background: rgba(255, 0, 0, 0.12);
-                    color: #ff6666;
-                    border: 0;
-                    border-radius: 3px;
-                    cursor: pointer;
-                    width: 20px;
-                    height: 20px;
-                    flex-shrink: 0;
-                `;
-
-                removeButton.onclick =
-                    () => {
-
-                        customBadges =
-                            customBadges.filter(
-                                id =>
-                                    id !==
-                                    badgeId
-                            );
-
-                        if (
-                            saveCustomBadges(
-                                customBadges
-                            )
-                        ) {
-
-                            addMessage.textContent =
-                                `Removed ${badgeId}`;
-
-                            addMessage.style.color =
-                                "#ff6666";
-
-                        } else {
-
-                            addMessage.textContent =
-                                "Failed to save change.";
-
-                            addMessage.style.color =
-                                "red";
-                        }
-
-                        renderCustomBadges();
-                    };
-
-                row.appendChild(
-                    idText
+            const row =
+                document.createElement(
+                    "div"
                 );
 
-                row.appendChild(
-                    removeButton
+            row.style.cssText = `
+                display:flex;
+                align-items:center;
+                gap:5px;
+
+                margin-bottom:4px;
+
+                background:
+                    var(--badge-remover-button);
+
+                padding:4px 5px;
+
+                border-radius:4px;
+            `;
+
+            const idText =
+                document.createElement(
+                    "span"
                 );
 
-                customList.appendChild(
-                    row
+            idText.textContent =
+                String(badgeId);
+
+            idText.style.cssText = `
+                flex:1;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            `;
+
+            const removeButton =
+                document.createElement(
+                    "button"
                 );
-            }
-        );
+
+            removeButton.textContent =
+                "×";
+
+            removeButton.title =
+                "Remove this custom badge";
+
+            removeButton.style.cssText = `
+                background:rgba(255,0,0,.12);
+                color:#ff6666;
+
+                border:0;
+                border-radius:3px;
+
+                cursor:pointer;
+
+                width:20px;
+                height:20px;
+
+                flex-shrink:0;
+            `;
+
+            removeButton.onclick = () => {
+
+                customBadges =
+                    customBadges.filter(
+                        id =>
+                            id !== badgeId
+                    );
+
+                saveCustomBadges(
+                    customBadges
+                );
+
+                addMessage.textContent =
+                    `Removed ${badgeId}`;
+
+                addMessage.style.color =
+                    "#ff6666";
+
+                renderCustomBadges();
+            };
+
+            row.appendChild(
+                idText
+            );
+
+            row.appendChild(
+                removeButton
+            );
+
+            customList.appendChild(
+                row
+            );
+        }
     }
 
-    // =========================
+    // =========================================================
     // ADD CUSTOM BADGE
-    // =========================
+    // =========================================================
 
     function addCustomBadge() {
 
-        const rawValue =
+        const value =
             badgeInput.value.trim();
 
-        if (!rawValue) {
+        if (!value) {
 
             addMessage.textContent =
                 "Enter a badge ID.";
@@ -913,9 +874,7 @@
             return;
         }
 
-        if (!/^\d+$/.test(
-            rawValue
-        )) {
+        if (!/^\d+$/.test(value)) {
 
             addMessage.textContent =
                 "Badge ID must be a number.";
@@ -926,14 +885,12 @@
             return;
         }
 
-        const badgeId =
-            Number(rawValue);
+        const id =
+            Number(value);
 
         if (
-            !Number.isSafeInteger(
-                badgeId
-            ) ||
-            badgeId <= 0
+            !Number.isSafeInteger(id) ||
+            id <= 0
         ) {
 
             addMessage.textContent =
@@ -946,13 +903,11 @@
         }
 
         if (
-            customBadges.includes(
-                badgeId
-            )
+            customBadges.includes(id)
         ) {
 
             addMessage.textContent =
-                "That badge is already saved.";
+                "Badge already saved.";
 
             addMessage.style.color =
                 "#ffaa00";
@@ -960,9 +915,7 @@
             return;
         }
 
-        customBadges.push(
-            badgeId
-        );
+        customBadges.push(id);
 
         if (
             !saveCustomBadges(
@@ -972,8 +925,8 @@
 
             customBadges =
                 customBadges.filter(
-                    id =>
-                        id !== badgeId
+                    badgeId =>
+                        badgeId !== id
                 );
 
             addMessage.textContent =
@@ -989,7 +942,7 @@
             "";
 
         addMessage.textContent =
-            `Saved badge ${badgeId}`;
+            `Saved ${id}`;
 
         addMessage.style.color =
             "#00ff66";
@@ -1014,14 +967,65 @@
 
     renderCustomBadges();
 
-    // =========================
-    // ROBLOX DELETE REQUEST
-    // =========================
+    // =========================================================
+    // CSRF TOKEN
+    // =========================================================
 
-    async function robloxDelete(
-        url
+    let csrfToken = null;
+
+    async function getCsrfToken() {
+
+        if (csrfToken) {
+            return csrfToken;
+        }
+
+        try {
+
+            const response =
+                await fetch(
+                    "https://auth.roblox.com/v2/logout",
+                    {
+                        method: "POST",
+                        credentials: "include"
+                    }
+                );
+
+            const token =
+                response.headers.get(
+                    "x-csrf-token"
+                );
+
+            if (token) {
+
+                csrfToken =
+                    token;
+
+                return token;
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "[Badge Remover] CSRF request failed:",
+                error
+            );
+        }
+
+        return null;
+    }
+
+    // =========================================================
+    // DELETE BADGE
+    // =========================================================
+
+    async function deleteBadge(
+        badgeId
     ) {
 
+        const url =
+            `https://badges.roblox.com/v1/user/badges/${badgeId}`;
+
+        // First attempt.
         let response =
             await fetch(
                 url,
@@ -1031,16 +1035,21 @@
                 }
             );
 
+        // Roblox normally gives us the CSRF
+        // token in the 403 response.
         if (
             response.status === 403
         ) {
 
-            const csrf =
+            const token =
                 response.headers.get(
                     "x-csrf-token"
                 );
 
-            if (csrf) {
+            if (token) {
+
+                csrfToken =
+                    token;
 
                 response =
                     await fetch(
@@ -1048,25 +1057,56 @@
                         {
                             method: "DELETE",
                             credentials: "include",
+
                             headers: {
                                 "X-CSRF-TOKEN":
-                                    csrf
+                                    token
                             }
                         }
                     );
+            } else {
+
+                const newToken =
+                    await getCsrfToken();
+
+                if (newToken) {
+
+                    response =
+                        await fetch(
+                            url,
+                            {
+                                method: "DELETE",
+                                credentials:
+                                    "include",
+
+                                headers: {
+                                    "X-CSRF-TOKEN":
+                                        newToken
+                                }
+                            }
+                        );
+                }
             }
         }
 
         return response;
     }
 
-    // =========================
-    // SCAN
-    // =========================
+    // =========================================================
+    // SCAN BADGES
+    // =========================================================
 
     async function scanBadges() {
 
+        // IMPORTANT:
+        // Prevent multiple scans at once.
         if (scanning) {
+
+            log(
+                "A scan is already running.",
+                "#ffaa00"
+            );
+
             return;
         }
 
@@ -1086,20 +1126,20 @@
             "";
 
         status.textContent =
-            "Authenticating...";
+            "Checking account...";
 
         try {
 
-            // =========================
-            // GET LOGGED-IN USER
-            // =========================
+            // =================================================
+            // GET USER
+            // =================================================
 
             const userResponse =
                 await fetch(
                     "https://users.roblox.com/v1/users/authenticated",
                     {
-                        credentials:
-                            "include"
+                        method: "GET",
+                        credentials: "include"
                     }
                 );
 
@@ -1108,50 +1148,44 @@
             ) {
 
                 throw new Error(
-                    `Authentication request failed (${userResponse.status})`
+                    `Authentication failed (${userResponse.status})`
                 );
             }
 
             const user =
                 await userResponse.json();
 
-            if (!user?.id) {
+            if (!user || !user.id) {
 
-                status.textContent =
-                    "Not logged in";
-
-                log(
-                    "Login required",
-                    "red"
+                throw new Error(
+                    "Could not find logged-in Roblox account."
                 );
-
-                return;
             }
 
             log(
-                `Logged in: ${user.name || user.id}`,
+                `Logged in: ${user.name} (${user.id})`,
                 "#00ff66"
             );
 
-            // =========================
-            // TARGET BADGES
-            // =========================
+            // =================================================
+            // TARGET IDS
+            // =================================================
 
-            const allBadgeIds = [
+            const targetIds = [
                 ...config.badgesToDelete,
                 ...customBadges
             ];
 
-            const uniqueBadgeIds = [
+            const uniqueTargetIds = [
                 ...new Set(
-                    allBadgeIds.map(
-                        id => Number(id)
+                    targetIds.map(
+                        Number
                     )
                 )
             ];
 
             log(
-                `Watching ${uniqueBadgeIds.length} badge(s)`,
+                `Configured badges: ${uniqueTargetIds.length}`,
                 "#00ff66"
             );
 
@@ -1160,14 +1194,14 @@
             ) {
 
                 log(
-                    `${customBadges.length} custom badge(s) loaded`,
+                    `Custom badges loaded: ${customBadges.length}`,
                     "#00ff66"
                 );
             }
 
-            // =========================
-            // FIND BADGES
-            // =========================
+            // =================================================
+            // GET ALL USER BADGES
+            // =================================================
 
             status.textContent =
                 "Scanning badges...";
@@ -1178,13 +1212,25 @@
             const targets =
                 [];
 
+            let pageNumber =
+                0;
+
             do {
 
+                pageNumber++;
+
                 const params =
-                    new URLSearchParams({
-                        limit: "100",
-                        sortOrder: "Asc"
-                    });
+                    new URLSearchParams();
+
+                params.set(
+                    "limit",
+                    "100"
+                );
+
+                params.set(
+                    "sortOrder",
+                    "Asc"
+                );
 
                 if (cursor) {
 
@@ -1197,37 +1243,45 @@
                 const url =
                     `https://badges.roblox.com/v1/users/${user.id}/badges?${params.toString()}`;
 
-                const pageResponse =
+                log(
+                    `Scanning page ${pageNumber}...`
+                );
+
+                const response =
                     await fetch(
                         url,
                         {
+                            method: "GET",
                             credentials:
                                 "include"
                         }
                     );
 
                 if (
-                    !pageResponse.ok
+                    !response.ok
                 ) {
 
                     throw new Error(
-                        `Badge request failed (${pageResponse.status})`
+                        `Badge API failed (${response.status})`
                     );
                 }
 
                 const page =
-                    await pageResponse.json();
+                    await response.json();
 
                 for (
                     const badge
                     of page.data || []
                 ) {
 
+                    const badgeId =
+                        Number(
+                            badge.id
+                        );
+
                     if (
-                        uniqueBadgeIds.includes(
-                            Number(
-                                badge.id
-                            )
+                        uniqueTargetIds.includes(
+                            badgeId
                         )
                     ) {
 
@@ -1241,35 +1295,37 @@
                     page.nextPageCursor ||
                     null;
 
-            } while (cursor);
+            } while (
+                cursor
+            );
 
-            // =========================
-            // NOTHING FOUND
-            // =========================
+            // =================================================
+            // SCAN RESULT
+            // =================================================
 
             if (
                 targets.length === 0
             ) {
 
                 status.textContent =
-                    "No badges found";
+                    "No matching badges";
 
                 log(
-                    "Nothing to delete",
-                    "yellow"
+                    "No matching badges were found.",
+                    "#ffaa00"
                 );
 
                 return;
             }
 
             log(
-                `Found ${targets.length} badge(s)`,
+                `Found ${targets.length} matching badge(s).`,
                 "#00ff66"
             );
 
-            // =========================
+            // =================================================
             // DELETE
-            // =========================
+            // =================================================
 
             let count =
                 0;
@@ -1285,15 +1341,15 @@
                     `Deleting ${count}/${targets.length}`;
 
                 log(
-                    `Deleting: ${badge.name}`,
-                    "yellow"
+                    `Deleting ${badge.name} (${badge.id})...`,
+                    "#ffaa00"
                 );
 
                 try {
 
                     const response =
-                        await robloxDelete(
-                            `https://badges.roblox.com/v1/user/badges/${badge.id}`
+                        await deleteBadge(
+                            badge.id
                         );
 
                     if (
@@ -1307,10 +1363,28 @@
 
                     } else {
 
+                        let errorText =
+                            "";
+
+                        try {
+                            errorText =
+                                await response.text();
+                        } catch {}
+
                         log(
-                            `Failed: ${badge.name} (${response.status})`,
-                            "red"
+                            `FAILED: ${badge.name} (${response.status})`,
+                            "#ff4444"
                         );
+
+                        if (
+                            errorText
+                        ) {
+
+                            console.warn(
+                                "[Badge Remover] Roblox response:",
+                                errorText
+                            );
+                        }
                     }
 
                 } catch (
@@ -1318,36 +1392,35 @@
                 ) {
 
                     console.error(
-                        "[Badge Remover]",
+                        "[Badge Remover] Delete error:",
                         error
                     );
 
                     log(
-                        `Error: ${badge.name}`,
-                        "red"
+                        `ERROR: ${badge.name}`,
+                        "#ff4444"
                     );
                 }
 
+                // Delay between deletes.
                 await new Promise(
-                    resolve => {
-
+                    resolve =>
                         setTimeout(
                             resolve,
                             config.settings.requestDelay
-                        );
-                    }
+                        )
                 );
             }
 
-            // =========================
-            // FINISHED
-            // =========================
+            // =================================================
+            // DONE
+            // =================================================
 
             status.textContent =
                 "Finished";
 
             log(
-                "All requests completed",
+                "Scan and deletion completed.",
                 "#00ff66"
             );
 
@@ -1366,7 +1439,7 @@
             log(
                 error.message ||
                 "Unknown error",
-                "red"
+                "#ff4444"
             );
 
         } finally {
@@ -1385,17 +1458,27 @@
         }
     }
 
-    // =========================
-    // SCAN BUTTON
-    // =========================
+    // =========================================================
+    // BUTTON
+    // =========================================================
 
     scanButton.onclick =
         scanBadges;
 
-    // =========================
-    // AUTOMATIC FIRST SCAN
-    // =========================
+    // =========================================================
+    // AUTOMATIC SCAN
+    // =========================================================
 
-    scanBadges();
+    if (
+        config.settings.autoScan
+    ) {
+
+        // Wait a little for Roblox to finish
+        // loading its page/API state.
+        setTimeout(
+            scanBadges,
+            1000
+        );
+    }
 
 })();
