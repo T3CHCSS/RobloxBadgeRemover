@@ -1,7 +1,8 @@
+```javascript
 // ==UserScript==
 // @name         Badge Remover V3
 // @namespace    https://github.com/T3CHCSS/RobloxBadgeRemover/
-// @version      latest.latest.4
+// @version      latest.latest.5
 // @description  Removes selected Roblox badges from your account.
 // @author       Seanszy
 // @homepageURL  https://github.com/T3CHCSS/RobloxBadgeRemover/
@@ -27,9 +28,6 @@
     // =========================
 
     const config = {
-        // These are built into the script.
-        // Updating the script will change this list,
-        // but NOT your custom badges.
         badgesToDelete: [
             2290821300126871,
             2911934755170615,
@@ -42,23 +40,15 @@
         ],
 
         settings: {
-            requestDelay: 1000,
-            hideDelay: 3000
+            requestDelay: 1000
         }
     };
 
     // =========================
     // PERMANENT CUSTOM STORAGE
     // =========================
-    //
-    // IMPORTANT:
-    // DO NOT CHANGE THIS KEY IN FUTURE UPDATES.
-    //
-    // localStorage survives userscript updates because
-    // the data is stored by the Roblox website, not
-    // inside this script.
-    //
 
+    // DO NOT CHANGE THIS KEY IN FUTURE UPDATES.
     const CUSTOM_BADGES_STORAGE_KEY =
         "seanszy_badge_remover_custom_badges_v1";
 
@@ -78,9 +68,17 @@
                 return [];
             }
 
-            return parsed
-                .map(id => Number(id))
-                .filter(id => Number.isSafeInteger(id) && id > 0);
+            return [
+                ...new Set(
+                    parsed
+                        .map(id => Number(id))
+                        .filter(
+                            id =>
+                                Number.isSafeInteger(id) &&
+                                id > 0
+                        )
+                )
+            ];
 
         } catch (error) {
             console.error(
@@ -136,8 +134,8 @@
         top: 50%;
         right: 15px;
         transform: translateY(-50%);
-        width: 220px;
-        max-height: 400px;
+        width: 230px;
+        max-height: 450px;
         overflow-y: auto;
         background: rgba(17, 17, 17, 0.95);
         color: white;
@@ -159,23 +157,51 @@
         ">
             <b>Badge Remover</b>
 
-            <button id="badgeRemoverToggleUI" style="
-                background: #222;
-                color: white;
-                border: 0;
-                border-radius: 4px;
-                cursor: pointer;
-                width: 22px;
-                height: 20px;
-            ">−</button>
+            <button
+                id="badgeRemoverToggleUI"
+                style="
+                    background: #222;
+                    color: white;
+                    border: 0;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    width: 22px;
+                    height: 20px;
+                "
+            >−</button>
         </div>
 
         <div id="badgeRemoverContent">
 
-            <div id="badgeRemoverStatus"
-                style="margin-bottom: 7px;">
-                Starting...
+            <!-- SCAN BUTTON -->
+
+            <button
+                id="badgeRemoverScanButton"
+                style="
+                    width: 100%;
+                    background: #333;
+                    color: white;
+                    border: 0;
+                    border-radius: 5px;
+                    padding: 7px;
+                    margin-bottom: 8px;
+                    cursor: pointer;
+                    font-weight: bold;
+                "
+            >
+                Scan Badges
+            </button>
+
+            <div
+                id="badgeRemoverStatus"
+                style="
+                    margin-bottom: 7px;
+                "
+            >
+                Ready
             </div>
+
+            <!-- ADD CUSTOM BADGE -->
 
             <div style="
                 border-top: 1px solid #333;
@@ -194,6 +220,7 @@
                     display: flex;
                     gap: 4px;
                 ">
+
                     <input
                         id="badgeRemoverBadgeInput"
                         type="text"
@@ -224,6 +251,7 @@
                     >
                         Add
                     </button>
+
                 </div>
 
                 <div
@@ -235,6 +263,8 @@
                 ></div>
 
             </div>
+
+            <!-- SAVED CUSTOM BADGES -->
 
             <div style="
                 border-top: 1px solid #333;
@@ -253,12 +283,16 @@
 
             </div>
 
+            <!-- LOGS -->
+
             <div style="
                 border-top: 1px solid #333;
                 padding-top: 8px;
                 margin-top: 8px;
             ">
+
                 <div id="badgeRemoverLogs"></div>
+
             </div>
 
         </div>
@@ -278,6 +312,9 @@
     const toggleUI =
         panel.querySelector("#badgeRemoverToggleUI");
 
+    const scanButton =
+        panel.querySelector("#badgeRemoverScanButton");
+
     const badgeInput =
         panel.querySelector("#badgeRemoverBadgeInput");
 
@@ -291,16 +328,55 @@
         panel.querySelector("#badgeRemoverCustomList");
 
     let minimized = false;
+    let scanning = false;
 
     // =========================
-    // CUSTOM BADGE UI
+    // MINIMIZE / OPEN
+    // =========================
+
+    toggleUI.onclick = () => {
+        minimized = !minimized;
+
+        content.style.display =
+            minimized ? "none" : "block";
+
+        toggleUI.textContent =
+            minimized ? "+" : "−";
+
+        panel.style.width =
+            minimized ? "100px" : "230px";
+    };
+
+    // =========================
+    // LOGGING
+    // =========================
+
+    function log(text, color = "white") {
+        const line =
+            document.createElement("div");
+
+        line.textContent = text;
+        line.style.color = color;
+        line.style.whiteSpace = "nowrap";
+        line.style.overflow = "hidden";
+        line.style.textOverflow = "ellipsis";
+
+        logs.appendChild(line);
+
+        logs.scrollTop =
+            logs.scrollHeight;
+    }
+
+    // =========================
+    // CUSTOM BADGE LIST
     // =========================
 
     function renderCustomBadges() {
         customList.innerHTML = "";
 
         if (customBadges.length === 0) {
-            const empty = document.createElement("div");
+            const empty =
+                document.createElement("div");
 
             empty.textContent =
                 "No custom badges saved.";
@@ -312,8 +388,9 @@
             return;
         }
 
-        customBadges.forEach((badgeId) => {
-            const row = document.createElement("div");
+        customBadges.forEach(badgeId => {
+            const row =
+                document.createElement("div");
 
             row.style.cssText = `
                 display: flex;
@@ -326,9 +403,11 @@
                 border-radius: 4px;
             `;
 
-            const idText = document.createElement("span");
+            const idText =
+                document.createElement("span");
 
-            idText.textContent = String(badgeId);
+            idText.textContent =
+                String(badgeId);
 
             idText.style.cssText = `
                 overflow: hidden;
@@ -362,15 +441,21 @@
                         id => id !== badgeId
                     );
 
-                saveCustomBadges(customBadges);
+                if (saveCustomBadges(customBadges)) {
+                    addMessage.textContent =
+                        `Removed ${badgeId}`;
+
+                    addMessage.style.color =
+                        "#ff6666";
+                } else {
+                    addMessage.textContent =
+                        "Failed to save change.";
+
+                    addMessage.style.color =
+                        "red";
+                }
 
                 renderCustomBadges();
-
-                addMessage.textContent =
-                    `Removed ${badgeId}`;
-
-                addMessage.style.color =
-                    "#ff6666";
             };
 
             row.appendChild(idText);
@@ -379,6 +464,10 @@
             customList.appendChild(row);
         });
     }
+
+    // =========================
+    // ADD CUSTOM BADGE
+    // =========================
 
     function addCustomBadge() {
         const rawValue =
@@ -394,7 +483,6 @@
             return;
         }
 
-        // Only allow numeric Roblox badge IDs.
         if (!/^\d+$/.test(rawValue)) {
             addMessage.textContent =
                 "Badge ID must be a number.";
@@ -405,7 +493,8 @@
             return;
         }
 
-        const badgeId = Number(rawValue);
+        const badgeId =
+            Number(rawValue);
 
         if (
             !Number.isSafeInteger(badgeId) ||
@@ -432,11 +521,7 @@
 
         customBadges.push(badgeId);
 
-        const saved =
-            saveCustomBadges(customBadges);
-
-        if (!saved) {
-            // Undo the addition if storage failed.
+        if (!saveCustomBadges(customBadges)) {
             customBadges =
                 customBadges.filter(
                     id => id !== badgeId
@@ -462,7 +547,8 @@
         renderCustomBadges();
     }
 
-    addButton.onclick = addCustomBadge;
+    addButton.onclick =
+        addCustomBadge;
 
     badgeInput.addEventListener(
         "keydown",
@@ -476,61 +562,15 @@
     renderCustomBadges();
 
     // =========================
-    // MINIMIZE UI
-    // =========================
-
-    toggleUI.onclick = () => {
-        minimized = !minimized;
-
-        content.style.display =
-            minimized ? "none" : "block";
-
-        toggleUI.textContent =
-            minimized ? "+" : "−";
-
-        panel.style.width =
-            minimized ? "100px" : "220px";
-    };
-
-    // =========================
-    // LOGGING
-    // =========================
-
-    function log(text, color = "white") {
-        const line =
-            document.createElement("div");
-
-        line.textContent = text;
-
-        line.style.color = color;
-
-        line.style.whiteSpace = "nowrap";
-
-        line.style.overflow = "hidden";
-
-        line.style.textOverflow = "ellipsis";
-
-        logs.appendChild(line);
-
-        logs.scrollTop =
-            logs.scrollHeight;
-    }
-
-    function hideUI() {
-        setTimeout(() => {
-            panel.style.display = "none";
-        }, config.settings.hideDelay);
-    }
-
-    // =========================
     // ROBLOX DELETE REQUEST
     // =========================
 
     async function robloxDelete(url) {
-        let response = await fetch(url, {
-            method: "DELETE",
-            credentials: "include"
-        });
+        let response =
+            await fetch(url, {
+                method: "DELETE",
+                credentials: "include"
+            });
 
         if (response.status === 403) {
             const csrf =
@@ -539,254 +579,302 @@
                 );
 
             if (csrf) {
-                response = await fetch(url, {
-                    method: "DELETE",
-                    credentials: "include",
-                    headers: {
-                        "X-CSRF-TOKEN": csrf
-                    }
-                });
+                response =
+                    await fetch(url, {
+                        method: "DELETE",
+                        credentials: "include",
+                        headers: {
+                            "X-CSRF-TOKEN": csrf
+                        }
+                    });
             }
         }
 
         return response;
     }
 
-    try {
-        // =========================
-        // GET LOGGED-IN USER
-        // =========================
+    // =========================
+    // SCAN
+    // =========================
 
-        const userResponse =
-            await fetch(
-                "https://users.roblox.com/v1/users/authenticated",
-                {
-                    credentials: "include"
-                }
-            );
-
-        if (!userResponse.ok) {
-            throw new Error(
-                `Authentication request failed (${userResponse.status})`
-            );
-        }
-
-        const user =
-            await userResponse.json();
-
-        if (!user?.id) {
-            status.textContent =
-                "Not logged in";
-
-            log(
-                "Login required",
-                "red"
-            );
-
+    async function scanBadges() {
+        if (scanning) {
             return;
         }
 
-        log(
-            `Logged in: ${user.name || user.id}`,
-            "#00ff66"
-        );
+        scanning = true;
 
-        // =========================
-        // BUILD TARGET LIST
-        // =========================
-        //
-        // Hardcoded badges + saved custom badges
-        //
+        scanButton.disabled = true;
 
-        const allBadgeIds = [
-            ...config.badgesToDelete,
-            ...customBadges
-        ];
+        scanButton.textContent =
+            "Scanning...";
 
-        const uniqueBadgeIds = [
-            ...new Set(
-                allBadgeIds.map(
-                    id => Number(id)
-                )
-            )
-        ];
+        scanButton.style.opacity =
+            "0.6";
 
-        log(
-            `Watching ${uniqueBadgeIds.length} badge(s)`,
-            "#00ff66"
-        );
+        logs.innerHTML = "";
 
-        if (customBadges.length > 0) {
+        status.textContent =
+            "Authenticating...";
+
+        try {
+            // =========================
+            // GET LOGGED-IN USER
+            // =========================
+
+            const userResponse =
+                await fetch(
+                    "https://users.roblox.com/v1/users/authenticated",
+                    {
+                        credentials: "include"
+                    }
+                );
+
+            if (!userResponse.ok) {
+                throw new Error(
+                    `Authentication request failed (${userResponse.status})`
+                );
+            }
+
+            const user =
+                await userResponse.json();
+
+            if (!user?.id) {
+                status.textContent =
+                    "Not logged in";
+
+                log(
+                    "Login required",
+                    "red"
+                );
+
+                return;
+            }
+
             log(
-                `${customBadges.length} custom badge(s) loaded`,
+                `Logged in: ${user.name || user.id}`,
                 "#00ff66"
             );
-        }
 
-        // =========================
-        // FIND BADGES
-        // =========================
+            // =========================
+            // BUILD TARGET LIST
+            // =========================
 
-        let cursor = null;
+            const allBadgeIds = [
+                ...config.badgesToDelete,
+                ...customBadges
+            ];
 
-        const targets = [];
-
-        do {
-            const params =
-                new URLSearchParams({
-                    limit: "100",
-                    sortOrder: "Asc"
-                });
-
-            if (cursor) {
-                params.set(
-                    "cursor",
-                    cursor
-                );
-            }
-
-            const url =
-                `https://badges.roblox.com/v1/users/${user.id}/badges?${params.toString()}`;
-
-            const pageResponse =
-                await fetch(url, {
-                    credentials: "include"
-                });
-
-            if (!pageResponse.ok) {
-                throw new Error(
-                    `Badge request failed (${pageResponse.status})`
-                );
-            }
-
-            const page =
-                await pageResponse.json();
-
-            for (
-                const badge of page.data || []
-            ) {
-                if (
-                    uniqueBadgeIds.includes(
-                        Number(badge.id)
+            const uniqueBadgeIds = [
+                ...new Set(
+                    allBadgeIds.map(
+                        id => Number(id)
                     )
-                ) {
-                    targets.push(badge);
-                }
+                )
+            ];
+
+            log(
+                `Watching ${uniqueBadgeIds.length} badge(s)`,
+                "#00ff66"
+            );
+
+            if (customBadges.length > 0) {
+                log(
+                    `${customBadges.length} custom badge(s) loaded`,
+                    "#00ff66"
+                );
             }
 
-            cursor =
-                page.nextPageCursor || null;
-
-        } while (cursor);
-
-        // =========================
-        // NOTHING FOUND
-        // =========================
-
-        if (targets.length === 0) {
-            status.textContent =
-                "No badges found";
-
-            log(
-                "Nothing to delete",
-                "yellow"
-            );
-
-            hideUI();
-
-            return;
-        }
-
-        log(
-            `Found ${targets.length} badge(s)`,
-            "#00ff66"
-        );
-
-        // =========================
-        // DELETE BADGES
-        // =========================
-
-        let count = 0;
-
-        for (const badge of targets) {
-            count++;
+            // =========================
+            // FIND BADGES
+            // =========================
 
             status.textContent =
-                `Deleting ${count}/${targets.length}`;
+                "Scanning badges...";
+
+            let cursor = null;
+            const targets = [];
+
+            do {
+                const params =
+                    new URLSearchParams({
+                        limit: "100",
+                        sortOrder: "Asc"
+                    });
+
+                if (cursor) {
+                    params.set(
+                        "cursor",
+                        cursor
+                    );
+                }
+
+                const url =
+                    `https://badges.roblox.com/v1/users/${user.id}/badges?${params.toString()}`;
+
+                const pageResponse =
+                    await fetch(url, {
+                        credentials: "include"
+                    });
+
+                if (!pageResponse.ok) {
+                    throw new Error(
+                        `Badge request failed (${pageResponse.status})`
+                    );
+                }
+
+                const page =
+                    await pageResponse.json();
+
+                for (
+                    const badge of page.data || []
+                ) {
+                    if (
+                        uniqueBadgeIds.includes(
+                            Number(badge.id)
+                        )
+                    ) {
+                        targets.push(badge);
+                    }
+                }
+
+                cursor =
+                    page.nextPageCursor ||
+                    null;
+
+            } while (cursor);
+
+            // =========================
+            // NOTHING FOUND
+            // =========================
+
+            if (targets.length === 0) {
+                status.textContent =
+                    "No badges found";
+
+                log(
+                    "Nothing to delete",
+                    "yellow"
+                );
+
+                return;
+            }
 
             log(
-                `Deleting: ${badge.name}`,
-                "yellow"
+                `Found ${targets.length} badge(s)`,
+                "#00ff66"
             );
 
-            try {
-                const response =
-                    await robloxDelete(
-                        `https://badges.roblox.com/v1/user/badges/${badge.id}`
+            // =========================
+            // DELETE BADGES
+            // =========================
+
+            let count = 0;
+
+            for (const badge of targets) {
+                count++;
+
+                status.textContent =
+                    `Deleting ${count}/${targets.length}`;
+
+                log(
+                    `Deleting: ${badge.name}`,
+                    "yellow"
+                );
+
+                try {
+                    const response =
+                        await robloxDelete(
+                            `https://badges.roblox.com/v1/user/badges/${badge.id}`
+                        );
+
+                    if (response.ok) {
+                        log(
+                            `Deleted: ${badge.name}`,
+                            "#00ff66"
+                        );
+                    } else {
+                        log(
+                            `Failed: ${badge.name} (${response.status})`,
+                            "red"
+                        );
+                    }
+
+                } catch (error) {
+                    console.error(
+                        "[Badge Remover]",
+                        error
                     );
 
-                if (response.ok) {
                     log(
-                        `Deleted: ${badge.name}`,
-                        "#00ff66"
-                    );
-                } else {
-                    log(
-                        `Failed: ${badge.name} (${response.status})`,
+                        `Error: ${badge.name}`,
                         "red"
                     );
                 }
 
-            } catch (error) {
-                console.error(
-                    "[Badge Remover]",
-                    error
-                );
-
-                log(
-                    `Error: ${badge.name}`,
-                    "red"
+                await new Promise(
+                    resolve => {
+                        setTimeout(
+                            resolve,
+                            config.settings.requestDelay
+                        );
+                    }
                 );
             }
 
-            await new Promise(
-                resolve => {
-                    setTimeout(
-                        resolve,
-                        config.settings.requestDelay
-                    );
-                }
+            // =========================
+            // FINISHED
+            // =========================
+
+            status.textContent =
+                "Finished";
+
+            log(
+                "All requests completed",
+                "#00ff66"
             );
+
+        } catch (error) {
+            console.error(
+                "[Badge Remover]",
+                error
+            );
+
+            status.textContent =
+                "Error";
+
+            log(
+                error.message ||
+                "Unknown error",
+                "red"
+            );
+
+        } finally {
+            scanning = false;
+
+            scanButton.disabled = false;
+
+            scanButton.textContent =
+                "Scan Badges";
+
+            scanButton.style.opacity =
+                "1";
         }
-
-        // =========================
-        // FINISHED
-        // =========================
-
-        status.textContent =
-            "Finished";
-
-        log(
-            "All requests completed",
-            "#00ff66"
-        );
-
-        hideUI();
-
-    } catch (error) {
-        console.error(
-            "[Badge Remover]",
-            error
-        );
-
-        status.textContent =
-            "Error";
-
-        log(
-            error.message ||
-            "Unknown error",
-            "red"
-        );
     }
 
+    // =========================
+    // SCAN BUTTON
+    // =========================
+
+    scanButton.onclick =
+        scanBadges;
+
+    // =========================
+    // AUTOMATIC FIRST SCAN
+    // =========================
+
+    // Automatically scan once when the script loads.
+    scanBadges();
+
 })();
+```
