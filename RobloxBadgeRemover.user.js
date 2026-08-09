@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Badge Remover V3
+// @name         Badge Remover
 // @namespace    https://github.com/T3CHCSS/RobloxBadgeRemover/
 // @version      latest.latest.6
 // @description  Removes selected Roblox badges from your account.
@@ -154,7 +154,7 @@
             align-items: center;
             margin-bottom: 7px;
         ">
-            <b>Badge Remover</b>
+            <b>Badge Remover</b> by <a href="https://www.roblox.com/users/5654478/profile">Seanszy</a>
 
             <button
                 id="badgeRemoverToggleUI"
