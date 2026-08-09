@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         Badge Remover V2
+// @name         Badge Remover V3
 // @namespace    https://github.com/T3CHCSS/RobloxBadgeRemover/
 // @homepageURL  https://github.com/T3CHCSS/RobloxBadgeRemover/
 // @updateURL    https://raw.githubusercontent.com/T3CHCSS/RobloxBadgeRemover/main/RobloxBadgeRemover.user.js
 // @downloadURL  https://raw.githubusercontent.com/T3CHCSS/RobloxBadgeRemover/main/RobloxBadgeRemover.user.js
-// @version      0.35.41
+// @version      0.35.44
 // @description  Removes selected Roblox badges from your account.
 // @author       Seanszy
 // @match        https://roblox.com/*
