@@ -1,0 +1,2 @@
+# RobloxBadgeRemover
+yes
