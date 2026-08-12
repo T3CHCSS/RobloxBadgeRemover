@@ -166,314 +166,249 @@
     // UI
     // =========================================================
 
-    const panel = document.createElement("div");
+    // =========================================================
+    // SIDEBAR UI
+    // =========================================================
 
+    const sidebarItem = document.createElement("li");
+    sidebarItem.id = "seanszyBadgeRemoverItem";
+    sidebarItem.style.cssText = `
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    `;
+
+    const panel = document.createElement("div");
     panel.id = "seanszyBadgeRemover";
 
     panel.style.cssText = `
-        position: fixed;
-        top: 50%;
-        right: 15px;
-        transform: translateY(-50%);
-
-        width: 230px;
-        max-height: 450px;
-
-        overflow-y: auto;
-
-        z-index: 999999;
-
-        padding: 10px;
+        width: 100%;
         box-sizing: border-box;
-
         font-family: Arial, sans-serif;
         font-size: 12px;
-
-        border-radius: 8px;
-
-        background: var(--badge-remover-bg);
         color: var(--badge-remover-text);
-
-        border: 1px solid var(--badge-remover-border);
-
-        box-shadow:
-            0 0 10px var(--badge-remover-shadow);
-
-        transition:
-            background 0.2s ease,
-            color 0.2s ease,
-            border-color 0.2s ease;
+        background: transparent;
     `;
 
     panel.innerHTML = `
         <div style="
             display:flex;
-            justify-content:space-between;
             align-items:center;
-            margin-bottom:7px;
-        ">
-
-            <b>Badge Remover</b>
-
-            <button
-                id="badgeRemoverToggleUI"
-                style="
-                    background:var(--badge-remover-button);
-                    color:var(--badge-remover-text);
-
-                    border:1px solid var(--badge-remover-border);
-                    border-radius:4px;
-
-                    cursor:pointer;
-
-                    width:22px;
-                    height:20px;
-                "
-            >−</button>
-
+            gap:9px;
+            width:100%;
+            min-height:42px;
+            padding:8px 12px;
+            box-sizing:border-box;
+            cursor:pointer;
+            user-select:none;
+            color:var(--badge-remover-text);
+            border-radius:6px;
+        " id="badgeRemoverHeader">
+            <span style="
+                width:20px;
+                height:20px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex-shrink:0;
+                font-size:15px;
+            ">🏅</span>
+            <b style="
+                flex:1;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+                font-size:13px;
+                font-weight:600;
+            ">Badge Remover</b>
+            <span id="badgeRemoverToggleUI" style="
+                width:18px;
+                height:18px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex-shrink:0;
+                font-size:15px;
+                opacity:.7;
+            ">−</span>
         </div>
 
-        <div id="badgeRemoverContent">
-
-            <!-- SCAN -->
-
-            <button
-                id="badgeRemoverScanButton"
-                style="
+        <div id="badgeRemoverContent" style="
+            padding:0 10px 10px 10px;
+            box-sizing:border-box;
+        ">
+            <div style="
+                padding:8px 0 6px;
+            ">
+                <button id="badgeRemoverScanButton" style="
                     width:100%;
-
+                    min-height:34px;
                     background:var(--badge-remover-button);
                     color:var(--badge-remover-text);
-
                     border:1px solid var(--badge-remover-border);
-                    border-radius:5px;
-
-                    padding:7px;
-                    margin-bottom:8px;
-
+                    border-radius:6px;
+                    padding:7px 8px;
                     cursor:pointer;
-
                     font-weight:bold;
-                "
-            >
-                Scan Badges
-            </button>
-
-            <div
-                id="badgeRemoverStatus"
-                style="
-                    margin-bottom:7px;
-                "
-            >
-                Ready
+                    box-sizing:border-box;
+                ">Scan Badges</button>
             </div>
 
-            <!-- ADD BADGE -->
+            <div id="badgeRemoverStatus" style="
+                margin:0 0 7px;
+                opacity:.75;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            ">Ready</div>
 
             <div style="
                 border-top:1px solid var(--badge-remover-border);
                 padding-top:8px;
                 margin-top:5px;
             ">
+                <b style="display:block;margin-bottom:5px;">Add Custom Badge</b>
 
-                <b style="
-                    display:block;
-                    margin-bottom:5px;
-                ">
-                    Add Custom Badge
-                </b>
-
-                <div style="
-                    display:flex;
-                    gap:4px;
-                ">
-
-                    <input
-                        id="badgeRemoverBadgeInput"
-                        type="text"
-                        placeholder="Badge ID"
-                        style="
-                            flex:1;
-                            min-width:0;
-
-                            background:
-                                var(--badge-remover-input);
-
-                            color:
-                                var(--badge-remover-text);
-
-                            border:
-                                1px solid var(--badge-remover-border);
-
-                            border-radius:4px;
-
-                            padding:5px;
-
-                            box-sizing:border-box;
-
-                            outline:none;
-                        "
-                    >
-
-                    <button
-                        id="badgeRemoverAddButton"
-                        style="
-                            background:
-                                var(--badge-remover-button);
-
-                            color:
-                                var(--badge-remover-text);
-
-                            border:
-                                1px solid var(--badge-remover-border);
-
-                            border-radius:4px;
-
-                            padding:5px 8px;
-
-                            cursor:pointer;
-                        "
-                    >
-                        Add
-                    </button>
-
+                <div style="display:flex;gap:4px;">
+                    <input id="badgeRemoverBadgeInput" type="text" placeholder="Badge ID" style="
+                        flex:1;
+                        min-width:0;
+                        height:30px;
+                        background:var(--badge-remover-input);
+                        color:var(--badge-remover-text);
+                        border:1px solid var(--badge-remover-border);
+                        border-radius:5px;
+                        padding:5px 7px;
+                        box-sizing:border-box;
+                        outline:none;
+                    ">
+                    <button id="badgeRemoverAddButton" style="
+                        background:var(--badge-remover-button);
+                        color:var(--badge-remover-text);
+                        border:1px solid var(--badge-remover-border);
+                        border-radius:5px;
+                        padding:5px 8px;
+                        cursor:pointer;
+                    ">Add</button>
                 </div>
 
-                <div
-                    id="badgeRemoverAddMessage"
-                    style="
-                        margin-top:5px;
-                        min-height:14px;
-                    "
-                ></div>
-
+                <div id="badgeRemoverAddMessage" style="
+                    margin-top:5px;
+                    min-height:14px;
+                    font-size:11px;
+                "></div>
             </div>
-
-            <!-- CUSTOM BADGES -->
 
             <div style="
                 border-top:1px solid var(--badge-remover-border);
                 padding-top:8px;
                 margin-top:8px;
             ">
-
-                <b style="
-                    display:block;
-                    margin-bottom:5px;
-                ">
-                    Saved Custom Badges
-                </b>
-
+                <b style="display:block;margin-bottom:5px;">Saved Custom Badges</b>
                 <div id="badgeRemoverCustomList"></div>
-
             </div>
-
-            <!-- LOGS -->
 
             <div style="
                 border-top:1px solid var(--badge-remover-border);
                 padding-top:8px;
                 margin-top:8px;
             ">
-
-                <div id="badgeRemoverLogs"></div>
-
+                <div id="badgeRemoverLogs" style="
+                    max-height:110px;
+                    overflow-y:auto;
+                    padding-right:2px;
+                "></div>
             </div>
-
         </div>
     `;
 
-    document.body.appendChild(panel);
+    sidebarItem.appendChild(panel);
 
-    const content =
-        panel.querySelector(
-            "#badgeRemoverContent"
+    function findSidebarList() {
+        const candidates = [
+            "#navigation ul",
+            ".rbx-left-col ul",
+            "[data-behavior='left-col'] ul",
+            "nav ul"
+        ];
+
+        for (const selector of candidates) {
+            const lists = document.querySelectorAll(selector);
+            for (const list of lists) {
+                const rect = list.getBoundingClientRect();
+                if (rect.left < window.innerWidth * 0.4 && rect.height > 0) {
+                    return list;
+                }
+            }
+        }
+
+        const knownLinks = document.querySelectorAll(
+            'a[href*="/home"], a[href*="/discover"], a[href*="/avatar"], a[href*="/inventory"], a[href*="/users/"], a[href*="/communities"]'
         );
 
-    const toggleUI =
-        panel.querySelector(
-            "#badgeRemoverToggleUI"
-        );
+        for (const link of knownLinks) {
+            const list = link.closest("ul");
+            if (list) {
+                const rect = list.getBoundingClientRect();
+                if (rect.left < window.innerWidth * 0.4 && rect.height > 0) {
+                    return list;
+                }
+            }
+        }
 
-    const status =
-        panel.querySelector(
-            "#badgeRemoverStatus"
-        );
+        return null;
+    }
 
-    const logs =
-        panel.querySelector(
-            "#badgeRemoverLogs"
-        );
+    function mountSidebarItem() {
+        if (!document.body.contains(sidebarItem)) {
+            const list = findSidebarList();
+            if (!list) return false;
 
-    const scanButton =
-        panel.querySelector(
-            "#badgeRemoverScanButton"
-        );
+            list.appendChild(sidebarItem);
+        }
 
-    const badgeInput =
-        panel.querySelector(
-            "#badgeRemoverBadgeInput"
-        );
+        return true;
+    }
 
-    const addButton =
-        panel.querySelector(
-            "#badgeRemoverAddButton"
-        );
+    mountSidebarItem();
 
-    const addMessage =
-        panel.querySelector(
-            "#badgeRemoverAddMessage"
-        );
+    const sidebarMountObserver = new MutationObserver(() => {
+        if (!document.body.contains(sidebarItem)) {
+            mountSidebarItem();
+        }
+    });
 
-    const customList =
-        panel.querySelector(
-            "#badgeRemoverCustomList"
-        );
+    sidebarMountObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
 
-    // =========================================================
-    // IMPORTANT FIX
-    // =========================================================
+    const content = panel.querySelector("#badgeRemoverContent");
+    const toggleUI = panel.querySelector("#badgeRemoverToggleUI");
+    const header = panel.querySelector("#badgeRemoverHeader");
+    const status = panel.querySelector("#badgeRemoverStatus");
+    const logs = panel.querySelector("#badgeRemoverLogs");
+    const scanButton = panel.querySelector("#badgeRemoverScanButton");
+    const badgeInput = panel.querySelector("#badgeRemoverBadgeInput");
+    const addButton = panel.querySelector("#badgeRemoverAddButton");
+    const addMessage = panel.querySelector("#badgeRemoverAddMessage");
+    const customList = panel.querySelector("#badgeRemoverCustomList");
 
-    // This was missing in the previous version.
-    // Without this, scanning immediately crashed.
     let scanning = false;
 
-    // =========================================================
-    // MINIMIZED STATE
-    // =========================================================
-
-    let minimized =
-        loadMinimizedState();
+    let minimized = loadMinimizedState();
 
     function applyMinimizedState() {
-
-        content.style.display =
-            minimized
-                ? "none"
-                : "block";
-
-        toggleUI.textContent =
-            minimized
-                ? "+"
-                : "−";
-
-        panel.style.width =
-            minimized
-                ? "100px"
-                : "230px";
+        content.style.display = minimized ? "none" : "block";
+        toggleUI.textContent = minimized ? "+" : "−";
     }
 
     applyMinimizedState();
 
-    toggleUI.onclick = () => {
-
-        minimized =
-            !minimized;
-
-        saveMinimizedState(
-            minimized
-        );
-
+    header.onclick = () => {
+        minimized = !minimized;
+        saveMinimizedState(minimized);
         applyMinimizedState();
     };
 
